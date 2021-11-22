@@ -1,4 +1,4 @@
-/// <reference types="cypress" />
+/// <reference types='cypress' />
 
 describe("Ongs", () => {
   it("should do a register", () => {
@@ -36,8 +36,8 @@ describe("Ongs", () => {
 
     cy.visit("http://localhost:3000");
     cy.intercept({ method: "POST", url: "**/sessions" }).as("sessions");
-    cy.get("input").type(id);
-    cy.get(".button").click();
+    cy.get("[data-cy=id]").type(id);
+    cy.get("[data-cy=button-login]").click();
 
     cy.intercept({ method: "GET", url: "**/profile" }).as("profile");
 
@@ -49,22 +49,9 @@ describe("Ongs", () => {
   });
 
   it("should register a case", () => {
-    const id = Cypress.env("createdOngId");
+    cy.login();
 
-    cy.visit("http://localhost:3000");
-    cy.intercept({ method: "POST", url: "**/sessions" }).as("sessions");
-    cy.get("input").type(id);
-    cy.get(".button").click();
-
-    cy.intercept({ method: "GET", url: "**/profile" }).as("profile");
-
-    cy.wait("@sessions").then(({ request, response }) => {
-      expect(request.body.id).be.eq(id);
-      expect(response.statusCode).be.eq(200);
-      cy.location("pathname").should("eq", "/profile");
-    });
-
-    cy.get(".button").click();
+    cy.get("[data-cy=button-new-case]").click();
 
     cy.location("pathname").should("eq", "/incidents/new");
 
@@ -77,15 +64,60 @@ describe("Ongs", () => {
       value: `${randomNumber}`,
     };
 
-    cy.get('[placeholder="Título do caso"]').type(caseRegister.title);
-    cy.get("textarea").type(caseRegister.description);
-    cy.get('[placeholder="Valor em reais"]').type(caseRegister.value);
+    cy.get("[data-cy=title]").type(caseRegister.title);
+    cy.get("[data-cy=description]").type(caseRegister.description);
+    cy.get("[data-cy=value]").type(caseRegister.value);
 
-    cy.get(".button").click();
+    cy.intercept({ method: "POST", url: "**/incidents" }).as("newCase");
+
+    cy.get("[data-cy=button-save]").click();
+
+    cy.wait("@newCase").then(({ request, response }) => {
+      expect(request.body.title).be.eq(caseRegister.title);
+      expect(request.body.description).be.eq(caseRegister.description);
+      expect(request.body.value).be.eq(caseRegister.value);
+      expect(response.statusCode).to.eq(200);
+      expect(response.body.id).is.not.null;
+    });
+
 
     cy.location("pathname").should("eq", "/profile");
-    cy.get("ul > li > p:first").should("have.text", caseRegister.title);
-    cy.get("ul > li > p:nth-of-type(2)").should("have.text", caseRegister.description);
-    cy.get("ul > li > p:nth-of-type(3)").should("have.text", Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(caseRegister.value));
+    cy.get("[data-cy=case-title]").should("have.text", caseRegister.title);
+    cy.get("[data-cy=case-description]").should(
+      "have.text",
+      caseRegister.description
+    );
+    cy.get("[data-cy=case-value]").should(
+      "have.text",
+      Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(
+        caseRegister.value
+      )
+    );
+  });
+
+  it("should do a logout", () => {
+    cy.login();
+    cy.get("[data-cy=button-delete]")
+      .click()
+      .should(() => {
+        expect(localStorage.getItem("ongId")).to.be.null;
+        expect(localStorage.getItem("ongName")).to.be.null;
+      });
+    cy.location("pathname").should("eq", "/");
+  });
+
+  it("should delete a case", () => {
+    cy.registerNewCase();
+    cy.login();
+
+    cy.intercept({ method: "DELETE", url: `**/incidents/*` }).as("caseRemoved");
+
+    cy.get("[data-cy=button-remove]").click();
+
+    cy.wait("@caseRemoved").then(({ request, response }) => {
+      expect(request.url).contains(Cypress.env("createdCaseId"));
+      expect(response.statusCode).be.eq(204);
+      expect(response.body).be.empty;
+    });
   });
 });

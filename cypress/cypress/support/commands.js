@@ -26,11 +26,12 @@
 
 Cypress.Commands.add("createOng", () => {
   const randomNumber = (Math.random() * 10000).toFixed(0);
+  const name = `Ong ${randomNumber}`;
   cy.request({
     method: "POST",
     url: "http://localhost:3333/ongs",
     body: {
-      name: `Ong ${randomNumber}`,
+      name,
       email: `ong${randomNumber}@mail.com`,
       whatsapp: `48999999{$randonNumber}`,
       city: "Içara",
@@ -43,11 +44,41 @@ Cypress.Commands.add("createOng", () => {
     expect(body).has.property("id");
     expect(id).is.not.null;
     Cypress.env("createdOngId", id);
+    Cypress.env("createdOngName", name);
   });
 });
 
-Cypress.Commands.add('generateRandomNumber', () => {
-    const randomNumber = (Math.random() * 10000).toFixed(0);
-    Cypress.env('randomNumber', randomNumber);
-    return randomNumber;
+Cypress.Commands.add("generateRandomNumber", () => {
+  const randomNumber = (Math.random() * 10000).toFixed(0);
+  Cypress.env("randomNumber", randomNumber);
+  return randomNumber;
+});
+
+Cypress.Commands.add("login", () => {
+  cy.visit("http://localhost:3000/profile", {
+    onBeforeLoad: (window) => {
+      window.localStorage.setItem("ongId", Cypress.env("createdOngId"));
+      window.localStorage.setItem("ongName", Cypress.env("createdOngName"));
+    },
+  });
+});
+
+Cypress.Commands.add('registerNewCase', () => {
+  cy.generateRandomNumber();
+  const randomNumber = Cypress.env('randomNumber');
+  cy.request({
+    method: 'POST',
+    url: 'http://localhost:3333/incidents',
+    headers: { 
+      Authorization: `${Cypress.env('createdOngId')}`
+    },
+    body: {
+      title: `Título ${randomNumber}`,
+      description: `Descrição ${randomNumber}`,
+      value: `${randomNumber}`,
+    }
+  }).then(response => {
+    expect(response.body.id).is.not.null;
+    Cypress.env('createdCaseId', response.body.id);
+  });
 });
