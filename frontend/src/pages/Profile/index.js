@@ -50,8 +50,11 @@ export default function Profile() {
         <img src={logoImg} alt="Be The Hero" />
         <span>Bem vinda, { ongName }</span>
 
-        <Link className="button" to="/incidents/new">Cadastrar novo caso</Link>
-        <button onClick={handleLogout} type="button" >
+        <Link className="button" to="/incidents/new" data-cy="button-new-case">Cadastrar novo caso</Link>
+        <button 
+          onClick={handleLogout} 
+          type="button"
+          data-cy="button-delete">
           <FiPower size={18} color="#E0" />
         </button>
       </header>
@@ -62,15 +65,18 @@ export default function Profile() {
         {incidents.map(incident => (
           <li key={incident.id} >
             <strong>CASO:</strong>
-            <p>{incident.title}</p>
+            <p data-cy="case-title">{incident.title}</p>
 
             <strong>DESCRIÇÃO:</strong>
-            <p>{incident.description}</p>
+            <p data-cy="case-description">{incident.description}</p>
 
             <strong>VALOR:</strong>
-            <p>{Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(incident.value)}</p>
+            <p data-cy="case-value">{Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(incident.value)}</p>
 
-            <button onClick={() => handleDeleteIncident(incident.id)} type="button">
+            <button 
+              onClick={() => handleDeleteIncident(incident.id)} 
+              type="button"
+              data-cy="button-remove">
               <FiTrash2 size={20} color="#a8a8b3" />
             </button>
           </li>

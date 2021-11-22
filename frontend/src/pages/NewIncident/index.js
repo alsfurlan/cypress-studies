@@ -17,8 +17,6 @@ export default function NewIncident() {
 
   const history = useHistory();
 
-
-
   async function handleNewIncident(e){
     e.preventDefault();
 
@@ -63,19 +61,28 @@ export default function NewIncident() {
           placeholder="Título do caso"
           value={title}
           onChange={e => setTitle(e.target.value)}
+          data-cy="title"
         />
         <textarea 
           placeholder="Descrição"
           value={description}
           onChange={e => setDescription(e.target.value)}
+          data-cy="description"
         />
         <input 
           placeholder="Valor em reais"
           value={value}
           onChange={e => setValue(e.target.value)}
+          data-cy="value"
         />
 
-        <button onClick={handleNewIncident} className="button" type="submit" >Cadastrar</button>
+        <button 
+          onClick={handleNewIncident} 
+          className="button" 
+          type="submit"
+          data-cy="button-save">
+            Cadastrar
+        </button>
       </form>
     </div>
   </div>
